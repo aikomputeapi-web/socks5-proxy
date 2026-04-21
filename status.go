@@ -26,6 +26,7 @@ type ProxyStatus struct {
 	Country string `json:"country"`
 	City    string `json:"city"`
 	Active  bool   `json:"active"`
+	Source  string `json:"source"`
 }
 
 func NewStatusServer(pool *ProxyPool) *StatusServer {
@@ -66,6 +67,7 @@ func (s *StatusServer) getStatusData() StatusData {
 			Country: p.Country,
 			City:    p.City,
 			Active:  i == activeIdx,
+			Source:  p.Source,
 		})
 	}
 
@@ -208,7 +210,7 @@ h1{font-size:1.3rem;color:#38bdf8}
     <span class="idx">{{$i}}</span>
     <div>
       <div class="addr">{{$p.Addr}}</div>
-      <div class="loc">{{$p.Country}}{{if $p.City}}, {{$p.City}}{{end}}</div>
+      <div class="loc">{{$p.Country}}{{if $p.City}}, {{$p.City}}{{end}} &bull; Src: {{$p.Source}}</div>
     </div>
   </div>
   <span class="status {{if $p.Active}}in-use{{else}}standby{{end}}">{{if $p.Active}}IN USE{{else}}standby{{end}}</span>

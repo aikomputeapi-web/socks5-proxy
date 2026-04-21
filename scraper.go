@@ -16,6 +16,7 @@ type Proxy struct {
 	Port    string
 	Country string
 	City    string
+	Source  string
 }
 
 func (p Proxy) Addr() string {
@@ -53,8 +54,9 @@ func Scrape(url string) ([]Proxy, error) {
 		}
 		seen[addr] = true
 		proxies = append(proxies, Proxy{
-			IP:   strings.TrimSpace(m[1]),
-			Port: strings.TrimSpace(m[2]),
+			IP:     strings.TrimSpace(m[1]),
+			Port:   strings.TrimSpace(m[2]),
+			Source: url,
 		})
 	}
 
