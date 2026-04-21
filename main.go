@@ -108,7 +108,7 @@ func refreshPool(cfg *Config, pool *ProxyPool) {
 		}
 	}
 
-	alive := CheckProxies(allProxies, cfg.CheckTimeout, cfg.MaxConcurrent)
+	alive := CheckProxies(allProxies, cfg.CheckTimeout, cfg.MaxConcurrent, pool)
 	pool.Update(alive)
 
 	scrapeMu.Lock()

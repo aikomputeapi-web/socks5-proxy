@@ -29,6 +29,17 @@ func (p *ProxyPool) Update(proxies []Proxy) {
 	}
 }
 
+// Add appends a single verified proxy instantly.
+func (p *ProxyPool) Add(px Proxy) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.proxies = append(p.proxies, px)
+	if len(p.proxies) == 1 {
+		p.current = 0
+		log.Printf("[pool] active proxy initialized: %s (%s %s)", px.Addr(), px.Country, px.City)
+	}
+}
+
 // Current returns the current active proxy.
 func (p *ProxyPool) Current() (Proxy, bool) {
 	p.mu.RLock()

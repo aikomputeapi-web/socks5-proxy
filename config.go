@@ -21,8 +21,8 @@ func ParseConfig() *Config {
 	flag.StringVar(&cfg.StatusAddr, "status", "127.0.0.1:8080", "HTTP status dashboard address")
 	flag.StringVar(&cfg.ScrapeURLs, "urls", "https://raw.githubusercontent.com/TheSpeedX/PROXY-List/master/socks5.txt,https://raw.githubusercontent.com/monosans/proxy-list/main/proxies/socks5.txt,https://raw.githubusercontent.com/hookzof/socks5_list/master/proxy.txt,https://raw.githubusercontent.com/ShiftyTR/Proxy-List/master/socks5.txt,https://api.proxyscrape.com/v2/?request=displayproxies&protocol=socks5,https://socks5-proxy.github.io/", "comma-separated proxy list URLs")
 	flag.DurationVar(&cfg.ScrapeInterval, "scrape-interval", 20*time.Minute, "scrape interval")
-	flag.DurationVar(&cfg.CheckTimeout, "check-timeout", 10*time.Second, "proxy check timeout")
-	flag.IntVar(&cfg.MaxConcurrent, "max-concurrent", 20, "max concurrent health checks")
+	flag.DurationVar(&cfg.CheckTimeout, "check-timeout", 5*time.Second, "proxy check timeout")
+	flag.IntVar(&cfg.MaxConcurrent, "max-concurrent", 200, "max concurrent health checks")
 	flag.Parse()
 
 	// Cloud deployment: always use fixed ports

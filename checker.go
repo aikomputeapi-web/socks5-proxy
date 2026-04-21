@@ -10,11 +10,13 @@ import (
 	"time"
 )
 
+var geoMu sync.Mutex
+
 // Removed blockedCountries map as we are now strictly filtering for US proxies only
 
 // CheckProxies concurrently checks a list of proxies.
 // Strictly filters for US-based IPs and tests Google connectivity.
-func CheckProxies(proxies []Proxy, timeout time.Duration, maxConcurrent int) []Proxy {
+func CheckProxies(proxies []Proxy, timeout time.Duration, maxConcurrent int, pool *ProxyPool) []Proxy {
 	var (
 		mu    sync.Mutex
 		alive []Proxy
@@ -49,6 +51,9 @@ func CheckProxies(proxies []Proxy, timeout time.Duration, maxConcurrent int) []P
 			mu.Lock()
 			alive = append(alive, px)
 			mu.Unlock()
+			if pool != nil {
+				pool.Add(px)
+			}
 		}(p)
 	}
 
@@ -107,8 +112,12 @@ func checkGoogle(p Proxy, timeout time.Duration) bool {
 	return string(respBuf[:4]) == "HTTP"
 }
 
-// LookupGeo queries ip-api.com for IP geolocation.
+// LookupGeo queries ip-api.com for IP geolocation sequentially to respect rate limits.
 func LookupGeo(ip string, timeout time.Duration) (country, city string) {
+	geoMu.Lock()
+	time.Sleep(1500 * time.Millisecond) // Throttles to max 40 requests per minute
+	defer geoMu.Unlock()
+
 	conn, err := net.DialTimeout("tcp", "ip-api.com:80", timeout)
 	if err != nil {
 		return "Unknown", ""
