@@ -29,23 +29,26 @@ func CheckProxies(proxies []Proxy, timeout time.Duration, maxConcurrent int) []P
 			defer wg.Done()
 			defer func() { <-sem }()
 
-			// Lookup geo first, skip blocked countries
+			// First, immediately test if the proxy is alive and fast!
+			if !checkGoogle(px, timeout) {
+				return // Dead or too slow, skip it.
+			}
+
+			// Proxy is alive and fast! ONLY NOW do we check its geolocation
 			country, city := LookupGeo(px.IP, timeout)
 			px.Country = strings.TrimSpace(country)
 			px.City = strings.TrimSpace(city)
 
 			countryLower := strings.ToLower(px.Country)
 			if countryLower != "united states" && countryLower != "us" {
-				log.Printf("[checker] %s skipped (%s - not US)", px.Addr(), px.Country)
+				log.Printf("[checker] %s alive but skipped (%s - not US)", px.Addr(), px.Country)
 				return
 			}
 
-			if checkGoogle(px, timeout) {
-				log.Printf("[checker] %s OK (%s %s)", px.Addr(), px.Country, px.City)
-				mu.Lock()
-				alive = append(alive, px)
-				mu.Unlock()
-			}
+			log.Printf("[checker] %s OK (%s %s)", px.Addr(), px.Country, px.City)
+			mu.Lock()
+			alive = append(alive, px)
+			mu.Unlock()
 		}(p)
 	}
 
