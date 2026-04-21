@@ -88,6 +88,7 @@ func main() {
 func refreshPool(cfg *Config, pool *ProxyPool) {
 	urls := strings.Split(cfg.ScrapeURLs, ",")
 	var allProxies []Proxy
+	seenGlobal := make(map[string]bool)
 	
 	for _, u := range urls {
 		u = strings.TrimSpace(u)
@@ -99,7 +100,12 @@ func refreshPool(cfg *Config, pool *ProxyPool) {
 			log.Printf("[error] scrape failed for %s: %v", u, err)
 			continue
 		}
-		allProxies = append(allProxies, proxies...)
+		for _, p := range proxies {
+			if !seenGlobal[p.Addr()] {
+				seenGlobal[p.Addr()] = true
+				allProxies = append(allProxies, p)
+			}
+		}
 	}
 
 	alive := CheckProxies(allProxies, cfg.CheckTimeout, cfg.MaxConcurrent)
