@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"math/rand"
+	"strings"
 	"sync"
 	"time"
 )
@@ -26,7 +27,7 @@ func main() {
 	log.Printf("socks5-pool starting...")
 	log.Printf("  listen:   %s", cfg.ListenAddr)
 	log.Printf("  status:   %s", cfg.StatusAddr)
-	log.Printf("  source:   %s", cfg.ScrapeURL)
+	log.Printf("  sources:  %s", cfg.ScrapeURLs)
 	log.Printf("  scrape:   every %s", cfg.ScrapeInterval)
 
 	pool := NewProxyPool()
@@ -84,13 +85,23 @@ func main() {
 }
 
 func refreshPool(cfg *Config, pool *ProxyPool) {
-	proxies, err := Scrape(cfg.ScrapeURL)
-	if err != nil {
-		log.Printf("[error] scrape failed: %v", err)
-		return
+	urls := strings.Split(cfg.ScrapeURLs, ",")
+	var allProxies []Proxy
+	
+	for _, u := range urls {
+		u = strings.TrimSpace(u)
+		if u == "" {
+			continue
+		}
+		proxies, err := Scrape(u)
+		if err != nil {
+			log.Printf("[error] scrape failed for %s: %v", u, err)
+			continue
+		}
+		allProxies = append(allProxies, proxies...)
 	}
 
-	alive := CheckProxies(proxies, cfg.CheckTimeout, cfg.MaxConcurrent)
+	alive := CheckProxies(allProxies, cfg.CheckTimeout, cfg.MaxConcurrent)
 	pool.Update(alive)
 
 	scrapeMu.Lock()

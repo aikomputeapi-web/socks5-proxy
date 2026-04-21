@@ -10,14 +10,10 @@ import (
 	"time"
 )
 
-// Blocked countries: China mainland + Hong Kong (can't access Google)
-var blockedCountries = map[string]bool{
-	"china":     true,
-	"hong kong": true,
-}
+// Removed blockedCountries map as we are now strictly filtering for US proxies only
 
 // CheckProxies concurrently checks a list of proxies.
-// Filters out CN/HK IPs, tests Google connectivity.
+// Strictly filters for US-based IPs and tests Google connectivity.
 func CheckProxies(proxies []Proxy, timeout time.Duration, maxConcurrent int) []Proxy {
 	var (
 		mu    sync.Mutex
@@ -38,8 +34,9 @@ func CheckProxies(proxies []Proxy, timeout time.Duration, maxConcurrent int) []P
 			px.Country = strings.TrimSpace(country)
 			px.City = strings.TrimSpace(city)
 
-			if blockedCountries[strings.ToLower(px.Country)] {
-				log.Printf("[checker] %s skipped (%s)", px.Addr(), px.Country)
+			countryLower := strings.ToLower(px.Country)
+			if countryLower != "united states" && countryLower != "us" {
+				log.Printf("[checker] %s skipped (%s - not US)", px.Addr(), px.Country)
 				return
 			}
 
@@ -53,7 +50,7 @@ func CheckProxies(proxies []Proxy, timeout time.Duration, maxConcurrent int) []P
 	}
 
 	wg.Wait()
-	log.Printf("[checker] %d/%d proxies alive (Google-verified, non-CN/HK)", len(alive), len(proxies))
+	log.Printf("[checker] %d/%d proxies alive (Google-verified, US-only)", len(alive), len(proxies))
 	return alive
 }
 

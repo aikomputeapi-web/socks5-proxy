@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-var proxyRegex = regexp.MustCompile(`socks5://(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d+)`)
+var proxyRegex = regexp.MustCompile(`(?:socks5://)?(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d+)`)
 
 type Proxy struct {
 	IP      string
